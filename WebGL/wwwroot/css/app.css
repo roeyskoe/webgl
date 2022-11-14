@@ -2,6 +2,11 @@ h1:focus {
     outline: none;
 }
 
+body{
+    margin: 0;
+    overflow: hidden;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

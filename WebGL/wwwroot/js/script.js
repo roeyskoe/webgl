@@ -22,6 +22,12 @@ function bufferData(type, size, dataptr, usage) {
 }
 
 function run(dt) {
+
+    gl.canvas.width = visualViewport.width;
+    gl.canvas.height = visualViewport.height;
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
     App?.WebGL?.Pages.Index.Update(dt)
     requestAnimationFrame(run);
 }
