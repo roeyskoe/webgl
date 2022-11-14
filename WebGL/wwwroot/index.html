@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8" />
     <title>WebGL</title>
-    <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
     
     <!-- If you add any scoped CSS files, uncomment the following to load them
@@ -12,15 +11,61 @@
 </head>
 
 <body>
-    <div id="app">Loading...</div>
+    <div id="app">
+        <h2>Loading...</h2>
+        <div class="progress mt-2" style="height: 2em;">
+            <div id="progressbar" class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 10%; background-color: #204066;"></div>
+        </div>
+        <div>
+            <span id="progressLabel" class="text-muted">Downloading file list</span>
+        </div>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script src="js/script.js"></script>
+    <script>
+        function StartBlazor() {
+            let loadedCount = 0;
+            const resourcesToLoad = [];
+            Blazor.start({
+                loadBootResource:
+                    function (type, filename, defaultUri, integrity) {
+                        if (type == "dotnetjs")
+                            return defaultUri;
+
+                        const fetchResources = fetch(defaultUri, {
+                            cache: 'no-cache',
+                            integrity: integrity,
+                            headers: { 'MyCustomHeader': 'My custom value' }
+                        });
+
+                        resourcesToLoad.push(fetchResources);
+
+                        fetchResources.then((r) => {
+                            loadedCount += 1;
+                            if (filename == "blazor.boot.json")
+                                return;
+                            const totalCount = resourcesToLoad.length;
+                            const percentLoaded = 10 + parseInt((loadedCount * 90.0) / totalCount);
+                            const progressbar = document.getElementById('progressbar');
+                            progressbar.style.width = percentLoaded + '%';
+                            const progressLabel = document.getElementById('progressLabel');
+                            progressLabel.innerText = `Downloading ${loadedCount}/${totalCount}: ${filename}`;
+                        });
+
+                        return fetchResources;
+                    }
+            });
+        }
+
+        StartBlazor();
+    </script>
 </body>
 
 </html>

@@ -1,6 +1,8 @@
 ﻿using System;
 using Silk.NET.OpenGL;
 using System.Runtime.InteropServices.JavaScript;
+using WebGL.Common;
+using System.Numerics;
 
 namespace WebGL.Pages;
 
@@ -13,11 +15,15 @@ public partial class Index
         layout (location = 0) in vec3 vPos;
         layout (location = 1) in vec2 vUv;
 
+        uniform mat4 uModel;
+        uniform mat4 uView;
+        uniform mat4 uProjection;
+
         out vec2 fUv;
 
         void main()
         {
-            gl_Position = vec4(vPos, 1.0);
+            gl_Position = uProjection * uView * uModel * vec4(vPos, 1.0);
             fUv = vUv;
         }
         """;
@@ -36,173 +42,84 @@ public partial class Index
         }
         """;
 
-    static JSObject Ebo;
-    static JSObject Vbo;
-    static JSObject Vao;
-    static JSObject Shader;
+    static BufferObject<uint> Ebo;
+    static BufferObject<float> Vbo;
+    static VertexArrayObject<float, uint> Vao;
+    static Common.Shader Shader;
 
     private static float[] Vertices =
 {
             //X    Y      Z     U   V
-             0.5f,  0.5f, 0.0f, 1f, 0f,
-             0.5f, -0.5f, 0.0f, 1f, 1f,
-            -0.5f, -0.5f, 0.0f, 0f, 1f,
-            -0.5f,  0.5f, 0.5f, 0f, 0f
+             0.5f,  0.5f, 0.5f, 1f, 0f,
+             0.5f, -0.5f, 0.5f, 1f, 1f,
+            -0.5f, -0.5f, 0.5f, 0f, 1f,
+            -0.5f,  0.5f, 0.5f, 0f, 0f,
+
+             0.5f,  0.5f, -0.5f, 1f, 0f,
+             0.5f, -0.5f, -0.5f, 1f, 1f,
+            -0.5f, -0.5f, -0.5f, 0f, 1f,
+            -0.5f,  0.5f, -0.5f, 0f, 0f
         };
 
-    private static uint[] Indices =
+    private static readonly uint[] Indices =
     {
             0, 1, 3,
-            1, 2, 3
+            1, 2, 3,
+            0, 4, 7,
+            7, 3, 0,
+            4, 5, 6,
+            6, 7, 4,
+            1, 5, 6,
+            6, 2, 1,
+            0, 4, 1,
+            4, 5, 1,
+            3, 6, 2,
+            3, 7, 6
         };
 
 
     protected override unsafe void OnAfterRender(bool firstRender)
     {
-        Js.init();
+        Js.Init();
 
-        var vert = Gl.createShader((int)GLEnum.VertexShader);
-        Gl.shaderSource(vert, vertex);
-        Gl.compileShader(vert);
-        Console.WriteLine(Gl.getShaderInfoLog(vert));
+        Shader = new Common.Shader(vertex, fragment);
 
-        var frag = Gl.createShader((int)GLEnum.FragmentShader);
-        Gl.shaderSource(frag, fragment);
-        Gl.compileShader(frag);
-        Console.WriteLine(Gl.getShaderInfoLog(frag));
+        Ebo = new BufferObject<uint>(Indices, BufferTargetARB.ElementArrayBuffer);
+        Vbo = new BufferObject<float>(Vertices, BufferTargetARB.ArrayBuffer);
+        Vao = new VertexArrayObject<float, uint>(Vbo, Ebo);
 
-        Shader = Gl.createProgram();
-        Gl.attachShader(Shader, vert);
-        Gl.attachShader(Shader, frag);
+        Vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 5, 0);
+        Vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 5, 3);
 
-        Gl.linkProgram(Shader);
-        Console.WriteLine(Gl.getProgramInfoLog(Shader));
-
-
-        Ebo = Gl.createBuffer();
-        Gl.bindBuffer((int)GLEnum.ElementArrayBuffer, Ebo);
-        fixed (void* d = &Indices[0])
-        {
-            Gl.bufferData((int)GLEnum.ElementArrayBuffer, sizeof(uint) * Indices.Length, (int)d, (int)GLEnum.StaticDraw);
-        }
-
-        Vbo = Gl.createBuffer();
-        Gl.bindBuffer((int)GLEnum.ArrayBuffer, Vbo);
-        fixed (void* d = &Vertices[0])
-        {
-            Gl.bufferData((int)GLEnum.ArrayBuffer, sizeof(float) * Vertices.Length, (int)d, (int)GLEnum.StaticDraw);
-        }
-
-        Vao = Gl.createVertexArray();
-        Gl.bindVertexArray(Vao);
-        Gl.bindBuffer((int)GLEnum.ArrayBuffer, Vbo);
-        Gl.bindBuffer((int)GLEnum.ElementArrayBuffer, Ebo);
-
-        Gl.vertexAttribPointer(0, 3, (int)VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-        Gl.enableVertexAttribArray(0);
-        Gl.vertexAttribPointer(1, 2, (int)VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
-        Gl.enableVertexAttribArray(1);
-
-        Js.run(0);
+        Js.Run(0);
     }
 
     [JSExport]
-    public static void Update(float dt)
+    public static void Update(float dt, float width, float height)
     {
-        Gl.useProgram(Shader);
-        Gl.clearColor(0.6f, 0.4f, 0.2f, 1);
-        Gl.clear(16384);
+        Shader.Use();
+        Gl.ClearColor(0.5f, 0.9f, 0.9f, 1);
+        Gl.Clear((int)(GLEnum.ColorBufferBit | GLEnum.DepthBufferBit));
 
-        Gl.bindVertexArray(Vao);
+        Gl.Enable((int)GLEnum.DepthTest);
+        //Gl.Enable((int)GLEnum.CullFace);
+
+        Vao.Bind();
+
+        Vector3 CameraPosition = new Vector3(0, 0, 3.0f);
+        Vector3 CameraFront = new Vector3(0.0f, 0.0f, -1.0f);
+        Vector3 CameraUp = Vector3.UnitY;
+        Vector3 CameraDirection = Vector3.Zero;
+
+        var model = Matrix4x4.CreateRotationY(dt / 2500) * Matrix4x4.CreateRotationX(dt / 3000) * Matrix4x4.CreateRotationZ(dt / 3500); ;
+        var view = Matrix4x4.CreateLookAt(CameraPosition, Vector3.Zero, CameraUp);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)Math.PI/4, width / height, 0.1f, 100.0f);
+
+        Shader.SetUniform("uModel", model);
+        Shader.SetUniform("uView", view);
+        Shader.SetUniform("uProjection", projection);
 
         Gl.DrawElements((int)GLEnum.Triangles, Indices.Length, (int)GLEnum.UnsignedInt, 0);
     }
 
-}
-
-
-public partial class Gl
-{
-    [JSImport("globalThis.gl.clear")]
-    public static partial void clear(int val);
-
-    [JSImport("globalThis.gl.clearColor")]
-    public static partial void clearColor(float r, float g, float b, float a);
-
-    [JSImport("globalThis.gl.createShader")]
-    public static partial JSObject createShader(int type);
-
-    [JSImport("globalThis.gl.shaderSource")]
-    public static partial void shaderSource(JSObject shader, string source);
-
-    [JSImport("globalThis.gl.compileShader")]
-    public static partial void compileShader(JSObject shader);
-
-    [JSImport("globalThis.gl.createProgram")]
-    public static partial JSObject createProgram();
-
-    [JSImport("globalThis.gl.attachShader")]
-    public static partial JSObject attachShader(JSObject program, JSObject shader);
-
-    [JSImport("globalThis.gl.linkProgram")]
-    public static partial JSObject linkProgram(JSObject program);
-
-    [JSImport("globalThis.gl.getShaderInfoLog")]
-    public static partial string getShaderInfoLog(JSObject shader);
-
-    [JSImport("globalThis.gl.getProgramInfoLog")]
-    public static partial string getProgramInfoLog(JSObject program);
-
-    [JSImport("globalThis.gl.getAttribLocation")]
-    public static partial int getAttribLocation(JSObject program, string attrib);
-
-    [JSImport("globalThis.gl.createBuffer")]
-    public static partial JSObject createBuffer();
-
-    [JSImport("globalThis.gl.bindBuffer")]
-    public static partial JSObject bindBuffer(int type, JSObject buffer);
-
-    [JSImport("globalThis.bufferData")]
-    public static partial JSObject bufferData(int type, int size, int bufferptr, int usage);
-
-    [JSImport("globalThis.gl.genBuffer")]
-    public static partial JSObject GenBuffer();
-
-    [JSImport("globalThis.gl.createVertexArray")]
-    public static partial JSObject createVertexArray();
-
-    [JSImport("globalThis.gl.bindVertexArray")]
-    public static partial void bindVertexArray(JSObject array);
-
-    [JSImport("globalThis.gl.enableVertexAttribArray")]
-    public static partial void enableVertexAttribArray(int pos);
-
-    [JSImport("globalThis.gl.vertexAttribPointer")]
-    public static partial void vertexAttribPointer(int position, int size, int type, bool normalize, int stride, int offset);
-
-    [JSImport("globalThis.gl.viewport")]
-    public static partial void viewport(int x, int y, int width, int height);
-
-    [JSImport("globalThis.gl.useProgram")]
-    public static partial void useProgram(JSObject program);
-
-    [JSImport("globalThis.gl.drawArrays")]
-    public static partial void drawArrays(int promitiveType, int offset, int count);
-
-    [JSImport("globalThis.gl.drawElements")]
-    public static partial void DrawElements(int promitiveType, int count, int type, int offset);
-
-    [JSImport("globalThis.gl.getError")]
-    public static partial int getError();
-}
-public static partial class Js
-{
-    [JSImport("globalThis.init")]
-    public static partial void init();
-
-    [JSImport("globalThis.run")]
-    public static partial void run(double dt);
-
-    [JSImport("globalThis.debugprint")]
-    public static partial void debugprint(int buffer);
 }

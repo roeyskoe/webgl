@@ -21,6 +21,21 @@ function bufferData(type, size, dataptr, usage) {
     gl.bufferData(type, arr, usage);
 }
 
+function uniformMatrix2fv(location, dataptr) {
+    let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, 4)
+    gl.uniformMatrix2fv(location, false, arr);
+}
+
+function uniformMatrix3fv(location, dataptr) {
+    let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, 9)
+    gl.uniformMatrix3fv(location, false, arr);
+}
+
+function uniformMatrix4fv(location, dataptr) {
+    let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, 16)
+    gl.uniformMatrix4fv(location, false, arr);
+}
+
 function run(dt) {
 
     gl.canvas.width = visualViewport.width;
@@ -28,11 +43,12 @@ function run(dt) {
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    App?.WebGL?.Pages.Index.Update(dt)
+    App?.WebGL?.Pages.Index.Update(dt, gl.canvas.width, gl.canvas.height)
     requestAnimationFrame(run);
 }
 
 
-function debugprint(data){
-    console.log(data);
+function debugprint(_handle, name) {
+    let x = gl.getUniformLocation(_handle, name);
+    console.log(x);
 }
