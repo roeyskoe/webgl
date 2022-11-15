@@ -95,6 +95,36 @@ public partial class Index
     }
 
     [JSExport]
+    public static void MouseMove(int x, int y)
+    {
+        Console.WriteLine($"Move x:{x}, y:{y}");
+    }
+
+    [JSExport]
+    public static void MouseDown(int x, int y)
+    {
+        Console.WriteLine($"Down x:{x}, y:{y}");
+    }
+
+    [JSExport]
+    public static void MouseUp(int x, int y)
+    {
+        Console.WriteLine($"Up x:{x}, y:{y}");
+    }
+
+    [JSExport]
+    public static void KeyDown(string s)
+    {
+        Console.WriteLine($"keyDown:{s}");
+    }
+
+    [JSExport]
+    public static void KeyUp(string s)
+    {
+        Console.WriteLine($"keyUp:{s}");
+    }
+
+    [JSExport]
     public static void Update(float dt, float width, float height)
     {
         Shader.Use();

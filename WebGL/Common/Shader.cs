@@ -8,7 +8,6 @@ namespace WebGL.Common;
 public class Shader : IDisposable
 {
     private JSObject _handle;
-    private GL _gl;
 
     public Shader(string vertexData, string fragmentData)
     {

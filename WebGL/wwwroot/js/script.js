@@ -14,7 +14,12 @@ async function init() {
 
     const { getAssemblyExports } = await globalThis.getDotnetRuntime(0);
     App = await getAssemblyExports("WebGL.dll");
-}
+
+    canvas.addEventListener("mousemove", (e) => App?.WebGL?.Pages.Index.MouseMove(e.clientX, e.clientY));
+    canvas.addEventListener("mousedown", (e) => App?.WebGL?.Pages.Index.MouseDown(e.clientX, e.clientY));
+    canvas.addEventListener("mouseup", (e) => App?.WebGL?.Pages.Index.MouseUp(e.clientX, e.clientY));
+    canvas.addEventListener("keydown", (e) => App?.WebGL?.Pages.Index.KeyDown(e.key));
+    canvas.addEventListener("keyup", (e) => App?.WebGL?.Pages.Index.KeyUp(e.key));
 
 function bufferData(type, size, dataptr, usage) {
     let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, size/4)
