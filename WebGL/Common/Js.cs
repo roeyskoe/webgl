@@ -11,5 +11,5 @@ public static partial class Js
     public static partial void Run(double dt);
 
     [JSImport("globalThis.debugprint")]
-    public static partial void Debugprint(JSObject pro, string buffer);
+    public static partial void Debugprint(JSObject x);
 }

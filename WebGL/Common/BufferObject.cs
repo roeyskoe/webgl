@@ -20,6 +20,7 @@ public class BufferObject<TDataType> : IDisposable
         {
             Gl.BufferData((int)bufferType, (int)(data.Length * sizeof(TDataType)), (int)d, (int)BufferUsageARB.StaticDraw);
         }
+        Js.Debugprint(_handle);
     }
 
     public void Bind()

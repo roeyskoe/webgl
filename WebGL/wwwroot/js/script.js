@@ -15,11 +15,16 @@ async function init() {
     const { getAssemblyExports } = await globalThis.getDotnetRuntime(0);
     App = await getAssemblyExports("WebGL.dll");
 
-    canvas.addEventListener("mousemove", (e) => App?.WebGL?.Pages.Index.MouseMove(e.clientX, e.clientY));
+    canvas.addEventListener("mousemove", (e) => App?.WebGL?.Pages.Index.MouseMove(e.movementX, e.movementY));
     canvas.addEventListener("mousedown", (e) => App?.WebGL?.Pages.Index.MouseDown(e.clientX, e.clientY));
     canvas.addEventListener("mouseup", (e) => App?.WebGL?.Pages.Index.MouseUp(e.clientX, e.clientY));
     canvas.addEventListener("keydown", (e) => App?.WebGL?.Pages.Index.KeyDown(e.key));
     canvas.addEventListener("keyup", (e) => App?.WebGL?.Pages.Index.KeyUp(e.key));
+
+    canvas.onclick = () => {
+        canvas.requestPointerLock();
+    }
+}
 
 function bufferData(type, size, dataptr, usage) {
     let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, size/4)
@@ -53,7 +58,6 @@ function run(dt) {
 }
 
 
-function debugprint(_handle, name) {
-    let x = gl.getUniformLocation(_handle, name);
+function debugprint(x) {
     console.log(x);
 }
