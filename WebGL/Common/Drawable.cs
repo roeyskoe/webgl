@@ -1,29 +1,30 @@
 ﻿using Silk.NET.OpenGL;
+using System.Numerics;
 
 namespace WebGL.Common;
 
-public class Drawable
+public unsafe class Drawable
 {
     public BufferObject<uint> Ebo;
-    public BufferObject<float> Vbo;
-    public VertexArrayObject<float, uint> Vao;
+    public BufferObject<VertexPositionColor> Vbo;
+    public VertexArrayObject<VertexPositionColor, uint> Vao;
 
-    public float[] Vertices;
+    public VertexPositionColor[] Vertices;
 
     public readonly uint[] Indices;
 
 
-    public Drawable(float[] vertices, uint[] indices)
+    public Drawable(VertexPositionColor[] vertices, uint[] indices)
     {
         Vertices = vertices;
         Indices = indices;
 
         Ebo = new BufferObject<uint>(Indices, BufferTargetARB.ElementArrayBuffer);
-        Vbo = new BufferObject<float>(Vertices, BufferTargetARB.ArrayBuffer);
-        Vao = new VertexArrayObject<float, uint>(Vbo, Ebo);
+        Vbo = new BufferObject<VertexPositionColor>(Vertices, BufferTargetARB.ArrayBuffer);
+        Vao = new VertexArrayObject<VertexPositionColor, uint>(Vbo, Ebo);
         Vao.Bind();
-        Vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 6, 0);
-        Vao.VertexAttributePointer(1, 3, VertexAttribPointerType.Float, 6, 3);
+        Vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, sizeof(VertexPositionColor), 0);
+        Vao.VertexAttributePointer(1, 4, VertexAttribPointerType.Float, sizeof(VertexPositionColor), sizeof(Vector3));
         Gl.BindVertexArray(null);
     }
 }

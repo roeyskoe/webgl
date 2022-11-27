@@ -4,71 +4,49 @@ using System.Runtime.InteropServices.JavaScript;
 using WebGL.Common;
 using System.Numerics;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
 namespace WebGL.Pages;
 
 public partial class Index
 {
-
-    static string vertex = $$"""
-        #version 300 es
-
-        layout (location = 0) in vec3 vPos;
-        layout (location = 1) in vec3 col;
-
-        uniform mat4 uModel;
-        uniform mat4 uView;
-        uniform mat4 uProjection;
-
-        out vec3 fCol;
-
-        void main()
-        {
-            gl_Position = uProjection * uView * uModel * vec4(vPos, 1.0);
-            fCol = col;
-        }
-        """;
-
-    static string fragment = $$"""
-        #version 300 es
-        
-        precision highp float;
-
-        in vec3 fCol;
-        
-        out vec4 FragColor;
-        
-        void main() {
-          FragColor  = vec4(fCol, 1);
-        }
-        """;
-
-
     static Common.Shader Shader;
     static Camera Camera;
 
     static List<Drawable> Drawables = new List<Drawable>();
 
-    protected override unsafe void OnAfterRender(bool firstRender)
+    public string Load(string path)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var name = assembly.GetName().Name;
+        using (Stream stream = assembly.GetManifestResourceStream($"{name}.{path}"))
+        using (StreamReader reader = new StreamReader(stream))
+        {
+            return reader.ReadToEnd();
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
             Js.Init();
 
-            Shader = new Common.Shader(vertex, fragment);
+            Shader = new Common.Shader(Load("Content.vert.gls"), Load("Content.frag.gls"));
             
-            Drawables.Add(new Drawable(new float[]
+            Drawables.Add(new Drawable(new VertexPositionColor[]
                 {
-                    //X     Y     Z     R   G   B
-                     0.5f,  0.5f, 0.5f, 1f, 0f, 0f,
-                     0.5f, -0.5f, 0.5f, 1f, 1f, 1f,
-                    -0.5f, -0.5f, 0.5f, 0f, 1f, 1f,
-                    -0.5f,  0.5f, 0.5f, 0f, 1f, 0f,
+                                              //X     Y     Z    R   G   B   A
+                     new VertexPositionColor(0.5f,  0.5f, 0.5f, 1f, 0f, 0f, 1f),
+                     new VertexPositionColor(0.5f, -0.5f, 0.5f, 1f, 1f, 1f, 1f),
+                     new VertexPositionColor(-0.5f, -0.5f, 0.5f, 0f, 1f, 1f, 1f),
+                     new VertexPositionColor(-0.5f,  0.5f, 0.5f, 0f, 1f, 0f, 1f),
 
-                     0.5f,  0.5f, -0.5f, 1f, 0f, 0f,
-                     0.5f, -0.5f, -0.5f, 1f, 1f, 1f,
-                    -0.5f, -0.5f, -0.5f, 0f, 1f, 1f,
-                    -0.5f,  0.5f, -0.5f, 0f, 1f, 0f
+                     new VertexPositionColor(0.5f,  0.5f, -0.5f, 1f, 0f, 0f, 1f),
+                     new VertexPositionColor(0.5f, -0.5f, -0.5f, 1f, 1f, 1f, 1f),
+                     new VertexPositionColor(-0.5f, -0.5f, -0.5f, 0f, 1f, 1f, 1f),
+                     new VertexPositionColor(-0.5f,  0.5f, -0.5f, 0f, 1f, 0f, 1f)
                 }, new uint[]
                 {
                     0, 1, 3,
@@ -85,26 +63,27 @@ public partial class Index
                     3, 7, 6
                 }
             ));
-            
-            Drawables.Add(new Drawable(new float[]
-                {
-                    //X   Y    Z    R   G   B
-                     50f, -5f, 50f,  0.2f, 0.2f, 0.2f,
-                     50f, -5f, -50f, 0.2f, 0.2f, 0.2f,
-                    -50f, -5f, -50f, 0.2f, 0.2f, 0.2f,
-                    -50f, -5f, 50f,  0.2f, 0.2f, 0.2f
+
+            Drawables.Add(new Drawable(new VertexPositionColor[]
+                { 
+                                             //X     Y    Z     R    G      B    A
+                      new VertexPositionColor(50f,  -5f, 50f,  0.2f, 0.2f, 0.2f, 1f),
+                      new VertexPositionColor(50f,  -5f, -50f, 0.2f, 0.2f, 0.2f, 1f),
+                      new VertexPositionColor(-50f, -5f, -50f, 0.2f, 0.2f, 0.2f, 1f),
+                      new VertexPositionColor(-50f, -5f, 50f,  0.2f, 0.2f, 0.2f, 1f)
                 }, new uint[]
                 {
                     0, 1, 3,
                     1, 2, 3,
                 }
             ));
-            
+
             Camera = new Camera(new Vector3(0,0,5), new Vector3(0.0f, 0.0f, -1.0f), Vector3.UnitY, 1);
 
             Js.Run(0);
         }
-        
+
+
     }
 
     static MouseState CurrMouseState;

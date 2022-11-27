@@ -57,7 +57,6 @@ function run(dt) {
     requestAnimationFrame(run);
 }
 
-
 function debugprint(x) {
     console.log(x);
 }
