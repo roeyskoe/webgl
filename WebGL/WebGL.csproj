@@ -6,6 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Content\book.obj" />
+    <None Remove="Content\test.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Content\book.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Content\test.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Content\frag.gls">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

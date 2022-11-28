@@ -1,30 +1,44 @@
 ﻿using Silk.NET.OpenGL;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace WebGL.Common;
 
 public unsafe class Drawable
 {
-    public BufferObject<uint> Ebo;
-    public BufferObject<VertexPositionColor> Vbo;
-    public VertexArrayObject<VertexPositionColor, uint> Vao;
+    public Vector3 Position { get; set; }
+    public Vector3 Rotation { get; set; }
 
-    public VertexPositionColor[] Vertices;
+    public List<Mesh> Meshes { get; set; } = new List<Mesh>();
 
-    public readonly uint[] Indices;
-
-
-    public Drawable(VertexPositionColor[] vertices, uint[] indices)
+    public Drawable(Vector3 pos, Vector3 rot)
     {
-        Vertices = vertices;
-        Indices = indices;
+        Position = pos;
+        Rotation = rot;
+    }
 
-        Ebo = new BufferObject<uint>(Indices, BufferTargetARB.ElementArrayBuffer);
-        Vbo = new BufferObject<VertexPositionColor>(Vertices, BufferTargetARB.ArrayBuffer);
-        Vao = new VertexArrayObject<VertexPositionColor, uint>(Vbo, Ebo);
-        Vao.Bind();
-        Vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, sizeof(VertexPositionColor), 0);
-        Vao.VertexAttributePointer(1, 4, VertexAttribPointerType.Float, sizeof(VertexPositionColor), sizeof(Vector3));
-        Gl.BindVertexArray(null);
+    public Drawable(List<Mesh> meshes)
+    {
+        Meshes.AddRange(meshes);
+    }
+
+    public void Draw(Shader shader)
+    {
+        var model = Matrix4x4.CreateRotationX(Rotation.X)
+                        * Matrix4x4.CreateRotationY(Rotation.Y)
+                        * Matrix4x4.CreateRotationZ(Rotation.Z)
+                        * Matrix4x4.CreateTranslation(Position);
+
+        shader.SetUniform("uModel", model);
+        foreach (var mesh in Meshes)
+        {
+            mesh.Vao.Bind();
+            if (mesh.Indices != null)
+                Gl.DrawElements((int)GLEnum.Triangles, mesh.Indices.Length, (int)GLEnum.UnsignedInt, 0);
+            else
+                Gl.DrawArrays((int)GLEnum.Triangles, 0, mesh.Vertices.Length);
+        }
+
     }
 }

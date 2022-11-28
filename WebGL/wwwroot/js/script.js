@@ -46,6 +46,11 @@ function uniformMatrix4fv(location, dataptr) {
     gl.uniformMatrix4fv(location, false, arr);
 }
 
+function uniform4fv(location, dataptr) {
+    let arr = new Float32Array(Module.HEAPF32.buffer, dataptr, 4)
+    gl.uniform4fv(location, arr);
+}
+
 function run(dt) {
 
     gl.canvas.width = visualViewport.width;

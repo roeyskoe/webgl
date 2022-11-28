@@ -3,8 +3,15 @@
 precision highp float;
 
 in vec4 fCol;
+in vec3 fNormal;
+
+uniform vec4 uDiffuse;
+
 out vec4 FragColor;
 
 void main() {
-    FragColor  = fCol;
+    vec3 normal = normalize(fNormal);
+    float fakeLight = dot(vec3(1.0, 1.0, 1.0), normal) * .5 + .5;
+    vec4 diffuse = uDiffuse * fCol;
+    FragColor  = vec4(diffuse.rgb * fakeLight, diffuse.a);
 }

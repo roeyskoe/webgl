@@ -31,59 +31,24 @@ public partial class Index
     {
         if (firstRender)
         {
+
             Js.Init();
-
             Shader = new Common.Shader(Load("Content.vert.gls"), Load("Content.frag.gls"));
+
+
+            // https://sketchfab.com/3d-models/book-vertex-chameleon-study-51b0b3bdcd844a9e951a9ede6f192da8
+            Drawable d1 = ObjReader.Parse("Content.book.obj");
+            d1.Position = new Vector3(0, 1, 0);
+            Drawables.Add(d1);
+
+            Drawable d3 = ObjReader.Parse("Content.test.obj");
+            d3.Position = new Vector3(1, -5, 0); // TODO: Normalize size
+            Drawables.Add(d3);
             
-            Drawables.Add(new Drawable(new VertexPositionColor[]
-                {
-                                              //X     Y     Z    R   G   B   A
-                     new VertexPositionColor(0.5f,  0.5f, 0.5f, 1f, 0f, 0f, 1f),
-                     new VertexPositionColor(0.5f, -0.5f, 0.5f, 1f, 1f, 1f, 1f),
-                     new VertexPositionColor(-0.5f, -0.5f, 0.5f, 0f, 1f, 1f, 1f),
-                     new VertexPositionColor(-0.5f,  0.5f, 0.5f, 0f, 1f, 0f, 1f),
-
-                     new VertexPositionColor(0.5f,  0.5f, -0.5f, 1f, 0f, 0f, 1f),
-                     new VertexPositionColor(0.5f, -0.5f, -0.5f, 1f, 1f, 1f, 1f),
-                     new VertexPositionColor(-0.5f, -0.5f, -0.5f, 0f, 1f, 1f, 1f),
-                     new VertexPositionColor(-0.5f,  0.5f, -0.5f, 0f, 1f, 0f, 1f)
-                }, new uint[]
-                {
-                    0, 1, 3,
-                    1, 2, 3,
-                    0, 4, 7,
-                    7, 3, 0,
-                    4, 5, 6,
-                    6, 7, 4,
-                    1, 5, 6,
-                    6, 2, 1,
-                    0, 4, 1,
-                    4, 5, 1,
-                    3, 6, 2,
-                    3, 7, 6
-                }
-            ));
-
-            Drawables.Add(new Drawable(new VertexPositionColor[]
-                { 
-                                             //X     Y    Z     R    G      B    A
-                      new VertexPositionColor(50f,  -5f, 50f,  0.2f, 0.2f, 0.2f, 1f),
-                      new VertexPositionColor(50f,  -5f, -50f, 0.2f, 0.2f, 0.2f, 1f),
-                      new VertexPositionColor(-50f, -5f, -50f, 0.2f, 0.2f, 0.2f, 1f),
-                      new VertexPositionColor(-50f, -5f, 50f,  0.2f, 0.2f, 0.2f, 1f)
-                }, new uint[]
-                {
-                    0, 1, 3,
-                    1, 2, 3,
-                }
-            ));
-
-            Camera = new Camera(new Vector3(0,0,5), new Vector3(0.0f, 0.0f, -1.0f), Vector3.UnitY, 1);
+            Camera = new Camera(new Vector3(0, 0, 5), new Vector3(0.0f, 0.0f, -1.0f), Vector3.UnitY, 1);
 
             Js.Run(0);
         }
-
-
     }
 
     static MouseState CurrMouseState;
@@ -142,18 +107,14 @@ public partial class Index
 
         Camera.AspectRatio = width / height;
 
-        var model = Matrix4x4.CreateRotationX(0); //Matrix4x4.CreateRotationY(dt / 2500) * Matrix4x4.CreateRotationX(dt / 3000) * Matrix4x4.CreateRotationZ(dt / 3500); ;
-
-        Shader.SetUniform("uModel", model);
         Shader.SetUniform("uView", Camera.GetViewMatrix());
         Shader.SetUniform("uProjection", Camera.GetProjectionMatrix());
+        Shader.SetUniform("uDiffuse", Vector4.One);
 
         foreach (var item in Drawables)
         {
-            item.Vao.Bind();
-            Gl.DrawElements((int)GLEnum.Triangles, item.Indices.Length, (int)GLEnum.UnsignedInt, 0);
+            item.Draw(Shader);
         }
-
     }
 
     public static void HandleKeys(float dt)

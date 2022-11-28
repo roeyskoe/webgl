@@ -83,6 +83,9 @@ public partial class Gl
     [JSImport("globalThis.uniformMatrix4fv")]
     public static partial void UniformMatrix4(JSObject location, int ptr);
 
+    [JSImport("globalThis.uniform4fv")]
+    public static partial void Uniform4(JSObject location, int ptr);
+
     // ============== Buffers etc ==================
 
     [JSImport("globalThis.gl.bindBuffer")]

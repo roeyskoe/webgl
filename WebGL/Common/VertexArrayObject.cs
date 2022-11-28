@@ -15,7 +15,7 @@ public class VertexArrayObject<TVertexType, TIndexType> : IDisposable
         _handle = Gl.CreateVertexArray();
         Bind();
         vbo.Bind();
-        ebo.Bind();
+        ebo?.Bind();
     }
 
     public unsafe void VertexAttributePointer(int index, int count, VertexAttribPointerType type, int vertexSizeBytes, int offSetBytes)
