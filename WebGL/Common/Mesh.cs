@@ -13,13 +13,13 @@ public unsafe class Mesh
 
     public readonly uint[] Indices;
 
-    public string MaterialName { get; set; }
+    public Material Material { get; set; }
 
-    public Mesh(VertexData[] vertices, uint[] indices, string materialName)
+    public Mesh(VertexData[] vertices, uint[] indices, Material material)
     {
         Vertices = vertices;
         Indices = indices;
-        MaterialName = materialName;
+        Material = material;
 
         Ebo = new BufferObject<uint>(Indices, BufferTargetARB.ElementArrayBuffer);
         Vbo = new BufferObject<VertexData>(Vertices, BufferTargetARB.ArrayBuffer);
@@ -31,10 +31,10 @@ public unsafe class Mesh
         Gl.BindVertexArray(null);
     }
 
-    public Mesh(VertexData[] vertices, string materialName)
+    public Mesh(VertexData[] vertices, Material material)
     {
         Vertices = vertices;
-        MaterialName = materialName;
+        Material = material;
 
         Vbo = new BufferObject<VertexData>(Vertices, BufferTargetARB.ArrayBuffer);
         Vao = new VertexArrayObject<VertexData, uint>(Vbo, null);

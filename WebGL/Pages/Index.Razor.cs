@@ -11,7 +11,8 @@ namespace WebGL.Pages;
 
 public partial class Index
 {
-    static Common.Shader Shader;
+    public static Common.Shader Shader;
+    public static Common.Shader ShaderMaterial;
     static Camera Camera;
 
     static List<Drawable> Drawables = new List<Drawable>();
@@ -33,17 +34,13 @@ public partial class Index
         {
 
             Js.Init();
-            Shader = new Common.Shader(Load("Content.vert.gls"), Load("Content.frag.gls"));
-
+            Shader = new Common.Shader(Load("Content.Shaders.vert.gls"), Load("Content.Shaders.frag.gls"));
+            ShaderMaterial = new Common.Shader(Load("Content.Shaders.vert.gls"), Load("Content.Shaders.fragMaterial.gls"));
 
             // https://sketchfab.com/3d-models/book-vertex-chameleon-study-51b0b3bdcd844a9e951a9ede6f192da8
-            Drawable d1 = ObjReader.Parse("Content.book.obj");
+            Drawable d1 = ObjReader.Parse("Content.Models.book.obj", "Content.Models.book.mtl");
             d1.Position = new Vector3(0, 1, 0);
             Drawables.Add(d1);
-
-            Drawable d3 = ObjReader.Parse("Content.test.obj");
-            d3.Position = new Vector3(1, -5, 0); // TODO: Normalize size
-            Drawables.Add(d3);
             
             Camera = new Camera(new Vector3(0, 0, 5), new Vector3(0.0f, 0.0f, -1.0f), Vector3.UnitY, 1);
 
@@ -90,15 +87,19 @@ public partial class Index
 
     static HashSet<string> KeysDown = new HashSet<string>();
 
+    static float prevTimeStamp = 0;
+
     [JSExport]
-    public static void Update(float dt, float width, float height)
+    public static void Update(float newTimeStamp, float width, float height)
     {
+        float dt = newTimeStamp - prevTimeStamp;
+        prevTimeStamp = newTimeStamp;
         HandleKeys(dt);
         HandleMouse(dt);
 
         PrevMouseState = CurrMouseState;
 
-        Shader.Use();
+        ShaderMaterial.Use();
         Gl.ClearColor(0.5f, 0.9f, 0.9f, 1);
         Gl.Clear((int)(GLEnum.ColorBufferBit | GLEnum.DepthBufferBit));
 
@@ -107,19 +108,22 @@ public partial class Index
 
         Camera.AspectRatio = width / height;
 
-        Shader.SetUniform("uView", Camera.GetViewMatrix());
-        Shader.SetUniform("uProjection", Camera.GetProjectionMatrix());
-        Shader.SetUniform("uDiffuse", Vector4.One);
+        ShaderMaterial.SetUniform("uView", Camera.GetViewMatrix());
+        ShaderMaterial.SetUniform("uViewWorldPosition", Camera.Position);
+        ShaderMaterial.SetUniform("uProjection", Camera.GetProjectionMatrix());
+
+        ShaderMaterial.SetUniform("uLightDirection", Vector3.One);
+        ShaderMaterial.SetUniform("uAmbientLightColor", new Vector3(0.1f,0.1f,0.1f));
 
         foreach (var item in Drawables)
         {
-            item.Draw(Shader);
+            item.Draw();
         }
     }
 
     public static void HandleKeys(float dt)
     {
-        float step = dt / 500000;
+        float step = dt / 1000;
         foreach (var key in KeysDown)
         {
             if (key == "ArrowLeft")
@@ -137,7 +141,8 @@ public partial class Index
 
     public static void HandleMouse(float dt)
     {
-        float step = dt / 500000;
+        Console.WriteLine(dt);
+        float step = dt / 1000;
         Vector2 change = CurrMouseState.Position - PrevMouseState.Position;
 
         Camera.ModifyDirection(change.X * step, change.Y * step);

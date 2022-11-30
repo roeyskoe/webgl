@@ -61,6 +61,16 @@ public class Shader : IDisposable
         Gl.Uniform4(location, (int)(float*)&value);
     }
 
+    public unsafe void SetUniform(string name, Vector3 value)
+    {
+        JSObject location = Gl.GetUniformLocation(_handle, name);
+        //if (location == -1)
+        //{
+        //    throw new Exception($"{name} uniform not found on shader.");
+        //}
+        Gl.Uniform3(location, (int)(float*)&value);
+    }
+
     public void SetUniform(string name, float value)
     {
         JSObject location = Gl.GetUniformLocation(_handle, name);

@@ -7,24 +7,15 @@
 
   <ItemGroup>
     <None Remove="Content\book.obj" />
+    <None Remove="Content\Models\book.mtl" />
     <None Remove="Content\test.obj" />
+    <None Remove="Content\trees.mtl" />
+    <None Remove="Content\trees.obj" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Content\book.obj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Content\test.obj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Content\frag.gls">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Content\vert.gls">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Content\Models\book.mtl" />
+    <EmbeddedResource Include="Content\Models\book.obj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Silk.NET.OpenGL" Version="2.16.0" />
